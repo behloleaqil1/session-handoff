@@ -81,5 +81,6 @@ mode). That file is yours to write: Claude does not pick its own permission mode
 - The hook runs on your prompts: a long unattended run gets no reminder until you next type something.
 - The last step is yours: type `/clear` and paste (or use `--go` on macOS).
 - `--go` works with macOS Terminal only.
+- On Windows the hook runs only where `bash` is on the PATH (for example Git Bash or WSL).
 
 MIT license.
