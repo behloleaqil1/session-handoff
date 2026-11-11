@@ -39,6 +39,17 @@ It is automatic after the install: on every prompt a hook checks, from the sessi
 session has become cheaper than carrying on. Only then it adds one line that tells Claude to finish the current
 request and run `/handoff`. Nothing to add to your `CLAUDE.md`. The check needs `jq`; without it the hook does nothing.
 
+## What it runs, reads and sends
+
+- **Sends nothing.** No network call, no telemetry. Everything stays on your machine.
+- **On every prompt** the hook runs `scripts/session-handoff.sh --hook`. It reads the token counts in the current
+  session's transcript (the `.jsonl` file under `~/.claude/projects/`) with `jq` and prints one line for Claude when a
+  switch is due. It writes nothing.
+- **`/handoff`** makes Claude write `HANDOFF.md` and `STATUS.md` in your project folder, then runs the script, which
+  reads those two files and copies the continue prompt to the clipboard.
+- **`--go`** (macOS, only when you ask for it) writes the prompt to a temporary file, opens a new Terminal window with
+  `claude`, and stops the old `claude` process after 30 seconds.
+
 ## When does a switch pay?
 
 Carrying on costs a cache read of the whole context on every call. A switch costs one cache write of the start-up
