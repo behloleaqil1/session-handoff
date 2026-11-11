@@ -5,8 +5,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/session-handoff.sh\" --hook",
-            "timeout": 10
+            "command": "bash",
+            "timeout": 10,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/session-handoff.sh",
+              "--hook"
+            ]
           }
         ]
       }
