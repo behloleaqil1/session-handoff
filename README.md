@@ -25,16 +25,14 @@ otherwise the prompt is printed.
 | Command | What it does |
 |---|---|
 | `/handoff` | Claude writes the handoff, then prepares the switch |
+| (automatic) | A hook tells Claude to run `/handoff` once a switch pays |
 | `session-handoff.sh --show` | Prints what the new session reads: the newest START HERE block and the last status lines |
 | `session-handoff.sh --due [idle]` | Exit 0 when a switch is now cheaper than carrying on |
 | `session-handoff.sh --go` | macOS: opens the new session in a new Terminal window and closes the old one |
 
-To let Claude decide by itself when to switch, add to your `CLAUDE.md`:
-
-```
-After every chunk of work append a bullet to STATUS.md. At clean points (no background agent running) run
-`session-handoff.sh --due`; when it says DUE, run /handoff. Never read HANDOFF.md or STATUS.md whole.
-```
+It is automatic after the install: on every prompt a hook checks, from the session's own transcript, whether a fresh
+session has become cheaper than carrying on. Only then it adds one line that tells Claude to finish the current
+request and run `/handoff`. Nothing to add to your `CLAUDE.md`. The check needs `jq`; without it the hook does nothing.
 
 ## When does a switch pay?
 
@@ -64,6 +62,8 @@ mode). That file is yours to write: Claude does not pick its own permission mode
 - A switch ends the session: background agents and tasks of the old session die. `/handoff` refuses to switch while
   one runs.
 - The handoff is only as good as the paragraph Claude writes. Read it once before you clear.
+- The hook runs on your prompts: a long unattended run gets no reminder until you next type something.
+- The last step is yours: type `/clear` and paste (or use `--go` on macOS).
 - `--go` works with macOS Terminal only.
 
 MIT license.

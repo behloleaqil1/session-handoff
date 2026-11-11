@@ -6,6 +6,9 @@
 #                  "idle" = before a wait longer than the prompt cache lifetime, a much lower limit.
 #   (no argument)  after Claude updated both files: check they are fresh, print the continue prompt and copy it to the
 #                  clipboard. Then type /clear and paste.
+#   --hook         for the plugin's UserPromptSubmit hook: reads the hook's JSON on stdin, runs the --due check on that
+#                  session's transcript and, only when a switch is due, prints one line that tells Claude to run
+#                  /handoff at the next clean point. Always exits 0 and prints nothing otherwise.
 #   --go           macOS only: the same check, then a NEW session opens in a new Terminal window with the prompt and
 #                  this session is closed after CLOSE_AFTER seconds. Background agents of this session die with it.
 # Settings (environment): HANDOFF_FILE, STATUS_FILE (default: HANDOFF.md, STATUS.md in the project folder),
@@ -17,6 +20,15 @@ SELF=$(cd "$(dirname "$0")" && pwd)/$(basename "$0")
 MAX_AGE_MIN=${MAX_AGE_MIN:-20}; STATUS_LINES=${STATUS_LINES:-6}
 PROMPT="Continue the work in $D. Run: bash \"$SELF\" --show   and read its output (the newest START HERE block of $(basename "$H") and the last $(basename "$S") lines). Do NOT read those two files whole. Then carry on with the next steps listed there."
 
+if [ "${1:-}" = --hook ]; then   # never fails and never blocks a prompt
+  command -v jq >/dev/null || exit 0
+  in=$(cat); t=$(printf %s "$in" | jq -r '.transcript_path // empty' 2>/dev/null)
+  [ -n "$t" ] && [ -f "$t" ] || exit 0
+  D=$(printf %s "$in" | jq -r '.cwd // empty' 2>/dev/null); export CLAUDE_PROJECT_DIR=${CLAUDE_PROJECT_DIR:-${D:-$PWD}}
+  out=$(TRANSCRIPT=$t bash "$SELF" --due 2>/dev/null) || exit 0
+  echo "session-handoff: a fresh session is now cheaper than carrying this one on (${out#DUE: }). Finish the user's current request first. Then, if no background agent or task of this session is running, run the /handoff command of the session-handoff plugin and tell the user in one line why."
+  exit 0
+fi
 if [ "${1:-}" = --due ]; then
   # Every call re-reads the whole context at the cache-read price (CACHE_READ x input). A switch costs
   #   S = CACHE_WRITE x B + RESTART_EXTRA   (B = the context after the start-up reads, taken at call 10; RESTART_EXTRA =
@@ -25,7 +37,7 @@ if [ "${1:-}" = --due ]; then
   #   B + sqrt(2 x S x g / CACHE_READ)
   command -v jq >/dev/null || { echo "not due: jq is not installed"; exit 1; }
   dir=${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$(printf %s "$D" | sed 's/[^A-Za-z0-9]/-/g')
-  t=$(ls -t "$dir"/*.jsonl 2>/dev/null | head -1)
+  t=${TRANSCRIPT:-$(ls -t "$dir"/*.jsonl 2>/dev/null | head -1)}
   [ -n "$t" ] || { echo "not due: no transcript in $dir"; exit 1; }
   r=$(jq -c 'select(.message.usage and .message.id) | [.message.id, (.message.usage | .input_tokens + .cache_read_input_tokens + .cache_creation_input_tokens)]' "$t" 2>/dev/null |
     jq -rs --argjson extra "${RESTART_EXTRA:-80000}" --argjson g0 "${GROWTH_DEFAULT:-1500}" --argjson cap "${DUE_MAX:-250000}" \
