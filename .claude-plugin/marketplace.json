@@ -1,0 +1,11 @@
+{
+  "name": "session-handoff",
+  "owner": { "name": "M Behlole Aqil" },
+  "plugins": [
+    {
+      "name": "session-handoff",
+      "source": "./",
+      "description": "Switch to a fresh Claude Code session cheaply: a short handoff block instead of a long context."
+    }
+  ]
+}

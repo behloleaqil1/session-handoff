@@ -1,0 +1,7 @@
+{
+  "name": "session-handoff",
+  "version": "1.0.0",
+  "description": "Cut Claude Code cost on long tasks: write a short handoff, start a fresh session that reads only that, and let a cost formula say when the switch pays.",
+  "license": "MIT",
+  "keywords": ["handoff", "context", "tokens", "cost", "session"]
+}
