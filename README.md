@@ -2,6 +2,11 @@
 
 A Claude Code plugin that cuts the cost of long tasks.
 
+**Measured: about 65% lower cost per call.** On the author's project, 21,717 main-session calls without the routine
+averaged 442K tokens of context each; 1,685 calls with it averaged 125K. Weighted by price (cache read 0.1, cache
+write 1.25, output 5, relative to one input token) that is 50.6K against 17.9K input-token equivalents per call,
+switch costs included. One project and different work in the two periods, so read it as an indication, not a benchmark.
+
 Every call in a session re-reads the whole conversation. After a few hours that is hundreds of thousands of tokens per
 call, most of it no longer needed. This plugin replaces the long context with a short written handoff:
 
